@@ -1,0 +1,160 @@
+{% include 'header.html' with page='Home' %}
+<!--
+{% include 'navbars.html' with active='home' %}
+ -->
+
+<script type="text/javascript" >
+
+var activeColor = null;
+
+$(document).ready(function() {
+    free();
+    pencilOptions();
+    hintsOptions();
+    doChanges();
+    activeColor = null;
+});
+</script>
+
+<div class="col-sm-3  col-md-2 sidebar">
+    <h2 class='top-head'>&nbsp;</h2>
+    <form action="/" method="post" role="form" >
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-group" id="form-level">
+            {{ form.level.errors }}
+            {{ form.level }}
+        </div>
+        <input class="btn btn-primary btn-sm" type="submit" name="get_game" id="getgame" value="Get Game" onClick="busy(this)" />
+    </form>
+    <br /><br />
+    {% if game %}
+    <form action="/{{ game.id }}" method="post" role="form" >
+        {% csrf_token %}
+        <div class="form-group" id="form-hints" onchange="hintsOptions()">
+            {{ form.hints }} {{form.hints.label}}
+        </div>
+        <div class="form-group" id="form-pencil" onchange="pencilOptions()">
+            {{ form.pencil }} {{form.pencil.label}}
+        </div>
+        <div class="form-group" id="form-color" onchange="colorOptions()">
+            {{ form.color }} {{form.color.label}}
+        </div>
+        <div class="form-group" id="form-colors" onchange="colorsOptions()" style="display:None;">
+            {{ form.colors }}
+        </div>
+        <div class="form-group" id="form-force"">
+            {{ form.force }} {{form.force.label}}
+        </div>
+<!--
+    </form>
+-->
+    {% endif %}
+    {% if transcript %}
+        {% for line in transcript %}
+            {{ line }}<br />
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="col-sm-9 col-md-10 main">
+
+    <h2 class='top-head'>Game {{ game.id }} ({{ game.level|slice:"2:25" }})</h2>
+    {% if errors %}
+        {% for error in errors %}
+                <h5 style="text-align: left">{{ error }}</h5>
+        {% endfor %}
+    {% endif %}
+
+
+    {% if changed %}<input type="hidden" id="changed" name="changed" value="{{ changed }}">{% endif %}
+
+    {% if game %}
+<!--
+    <form action="/{{ game.id }}" method="post" role="form" >
+ -->
+    {% csrf_token %}
+
+    <input class="btn btn-success btn-sm" type="submit" name="solve" id="update" value="Solve" onClick="busy(this)" />
+    <input class="btn btn-info btn-sm" type="submit" name="check" id="check" value="Check" onClick="busy(this)" />
+    {% if checked is not None %}
+        {% if checked %}<i style="color:green;font-size:20px;" class="fa fa-check">&emsp;</i>
+        {% else %}<i style="color:red;font-size:20px;" class="fa fa-times"></i>&emsp;{% endif %}
+    {% else %}&emsp;&emsp;&emsp;&nbsp;
+    {% endif %}
+    <input class="btn btn-primary btn-sm pull-center" type="button" name="print" id="print" value="Print" onClick="printGrid()" />
+    <input type="hidden" name="game_id" value="{{ game.id }}">
+    <div id="theGrid" class="table-responsive">
+        <table class="table table-sudoku-outer">
+            <col style="width:33%">
+            <col style="width:33%">
+            <col style="width:33%">
+            <tbody>
+
+            {% if display %}
+
+                {% for arearow in display %}
+                 <tr class="sudoku-{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+                    {% for area in arearow %}
+                    <td class="sudoku-{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+                        <table class="table table-sudoku">
+                            <col style="width:33%">
+                            <col style="width:33%">
+                            <col style="width:33%">
+                            <tbody>
+
+                                {% for row in area %}
+                                <tr>
+                                    {% for col in row %}
+                                    <td id="cell-row{{col.row}}col{{col.col}}" class="color-cell" onclick="colorMe(this.id)">
+                                        {%if col.starter %}
+                                        <div class="hints" id="hints-row{{col.row}}col{{col.col}}">
+                                            &nbsp;
+                                        </div>
+                                        <div class="pencil" >
+                                            <input class="pencil" size="9" maxlen="8" readonly >
+                                        </div>
+                                        <input size="1" maxlen="1" class="sudoku starter"
+                                            value="{{ col.answer }}"
+                                            readonly
+                                            >
+                                        {% else %}
+                                        <div class="hints" id="hints-row{{col.row}}col{{col.col}}" onclick="event.stopPropagation()">
+                                            {% for pos in col.possibles %}{{ pos }}{% endfor %}
+                                        </div>
+                                        <div class="pencil" onclick="event.stopPropagation()">
+                                            <input class="pencil" name="pencil-row{{col.row}}col{{col.col}}" size="9" maxlen="8"
+                                            id="pencil-row{{col.row}}col{{col.col}}" value="{{ col.pencil }}">
+                                        </div>
+                                        <input size="1" maxlen="1" class="sudoku {% if col.wrong %}fail{% else %}answer{% endif %}"
+                                            id="answer-row{{col.row}}col{{col.col}}" name="answer-row{{col.row}}col{{col.col}}"
+                                            onclick="event.stopPropagation()"
+                                            {% if col.answer %}
+                                            value="{{ col.answer }}"
+                                            {% endif %}
+                                            >
+                                        {% endif %}
+                                    </td>
+
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                    {% endfor %}
+                 </tr>
+                {% endfor %}
+
+     {% endif %}
+
+            <tbody>
+        </table>
+    </div>
+            </form>
+
+    {% endif %}
+
+</div>
+
+{% include 'footer.html' %}

@@ -1,0 +1,73 @@
+{% include 'header.html' with page='Manage Games' %}
+<!--
+{% include 'navbars.html' with active='manage' %}
+ -->
+
+<script type="text/javascript" >
+$(document).ready(function() {
+    free();
+    gridify();
+});
+</script>
+
+
+<div class="col-sm-4  col-md-4 sidebar">
+    {% if game is not None %}
+        <h2 class='top-head'>Change Game {{ game.id }}</h2>
+    {% else %}
+        <h2 class='top-head'>Add a Game</h2>
+    {% endif %}
+        <form action="/games{% if game is not None %}/{{ game.id }}{% endif %}" method="post" role="form" >
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="form-group" id="form-level">
+                {{ form.level.errors }}
+                {{ form.level }}
+            </div>
+            <div class="form-group" id="form-note">
+                {{form.note.label}}<br/>
+                {{ form.note.errors }}
+                {{ form.note }}
+            </div>
+            <div class="form-group" id="form-game">
+                {{form.given.label}}<br/>
+                {{ form.given.errors }}
+                {{ form.given }}
+            </div>
+            <input class="btn btn-info btn-sm" type="submit" name="save" id="save" value="Save" onClick="busy(this)" />
+        </form>
+</div>
+<div class="col-sm-8 col-md-8 main">
+    <h2 class='top-head'>Your Games</h2>
+    <div class="table-responsive">
+        <table class="table games-listing">
+          <colgroup>
+            <col style="width:5%">
+            <col style="width:5%">
+            <col style="width:5%">
+            <col style="width:85%">
+          </colgroup>
+            <tbody>
+            {% if games|length > 0 %}
+                {% for game in games %}
+                <tr>
+                <td><a href="/{{ game.id }}" title="Play" class="glyphicon glyphicon-play"></a></td>
+                <td><a href="/games/{{ game.id }}" title="Edit" class="glyphicon glyphicon-edit"></a></td>
+                <td><a href="/games/{{ game.id }}/delete" title="Delete" class="glyphicon glyphicon-remove"></a></td>
+                <td><table><tr><td>
+
+                <span class="given" >{{ game.given}}</span>
+                </td><td style="vertical-align:top;padding-left:10px;" >
+                No. {{ game.id }}<br />{{ game.level }}<br>{% if game.note|length > 0 %}{{ game.note }}<br />{% endif %}{{ game.owner}}
+                </td></tr></table></td></tr>
+                {% endfor %}
+            {% else %}
+                You have no personal games yet
+            {% endif %}
+
+            </tbody>
+        </table>
+    <div>
+</div>
+
+{% include 'footer.html' %}
