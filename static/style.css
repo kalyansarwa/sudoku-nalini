@@ -1,0 +1,211 @@
+.form-group ul {
+    list-style-type: none;
+}
+
+.form-group {
+    text-align: left;
+}
+
+.dialog td, .dialog th {
+    padding: 5px;
+}
+
+
+.success {
+    color: green;
+}
+
+.pencil {
+    color: grey;
+    font-size: 10px;
+    text-align: center;
+    align: center;
+    background-color: inherit;
+    display: none;
+    border: 0;
+    min-height: 20px;
+}
+
+input.pencil {
+    border: 0;
+    outline: none;
+    text-align: center;
+    background-color: #ececec;
+}
+
+
+.hints {
+    color: grey;
+    font-size: 10px;
+    display: none;
+    background-color: inherit;
+}
+
+
+.answer {
+    color: black;
+    font: 24px 'Comic Sans MS', 'Comic Sans', 'Marker Felt', 'Courier', cursive;
+}
+
+
+.starter {
+    color: #02428A;
+    font: bold 24px Arial, sans-serif;
+}
+
+.fail {
+    color: red;
+    font: 24px 'Comic Sans MS', 'Comic Sans', 'Marker Felt', 'Courier', cursive;
+}
+
+.error {
+    color: red;
+}
+
+
+.table-sudoku-outer {
+    padding: 0;
+    margin-top: 10px;
+    border: 2px solid black;
+    border-collapse: collapse;
+    border-spacing: 0;
+    cellspacing: 0;
+    table-layout: fixed;
+    width: 81vh !important;
+    background-color: black;
+}
+
+.table-sudoku-outer td, .table-sudoku-outer tr, .table-sudoku-outer tbody {
+    padding: 0;
+    margin: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+    cellspacing: 0;
+}
+
+.table-sudoku-outer tbody tr td {
+    border-collapse: collapse;
+    border-color: black;
+    padding: 0;
+}
+
+.table {
+    border-collapse: collapse;
+    background-color: inherit;
+}
+
+.table .table {
+    background-color: inherit;
+    border-collapse: collapse;
+}
+
+
+.table-sudoku {
+    margin: 0px;
+    border: 2px solid black;
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 27vh !important;
+    table-layout: fixed;
+    background-color: black;
+}
+
+.table-sudoku td,
+.table-sudoku tbody tr td {
+    border: 0.5px solid black;
+    border-collapse: collapse;
+    height: 9vh;
+    width: 9vh;
+    text-align: center !important;
+    vertical-align: middle;
+    background-color: inherit;
+}
+
+
+
+input.sudoku {
+
+    padding: 2px 4px;
+    border: 0;
+    box-shadow: none;
+    transition: none;
+    transition-property: none;
+    margin-bottom: 2px;
+    background-color: inherit;
+    outline: none;
+}
+
+tr.sudoku-odd td.sudoku-odd {
+    border-collapse: collapse;
+    border-color: black;
+    background-color: #fff;
+}
+
+tr.sudoku-odd td.sudoku-even {
+    border-collapse: collapse;
+    border-color: black;
+    background-color: #d7d7d7;
+}
+
+tr.sudoku-even td.sudoku-odd {
+    border-collapse: collapse;
+    border-color: black;
+    background-color: #d7d7d7;
+}
+
+tr.sudoku-even td.sudoku-even {
+    border-collapse: collapse;
+    border-color: black;
+    background-color: #fff;
+}
+
+/*
+tr.sudoku-odd td.sudoku-odd input.pencil, tr.sudoku-even td.sudoku-even input.pencil {
+    background-color: #d7d7d7;
+}
+
+tr.sudoku-even td.sudoku-odd input.pencil, tr.sudoku-odd td.sudoku-even input.pencil {
+    background-color: #fff;
+}
+ */
+
+
+input.fail {
+    color: red;
+    font-weight: bold;
+}
+
+
+.top-head {
+    margin-top: 70px;
+}
+
+.given {
+}
+
+table.mini-grid {
+    border-collapse: collapse;
+    border: 2px solid black;
+    font-size: 8px;
+}
+
+table.mini-grid tr, table.mini-grid td {
+    border-collapse: collapse;
+    border: 0.5px solid black;
+    font-size: 8px;
+    height: 12px;
+    width: 12px;
+    text-align: center;
+}
+
+table.mini-grid td:nth-child(3), table.mini-grid td:nth-child(6) {
+ border-right: solid 2px black;
+}
+
+table.mini-grid tr:nth-child(3), table.mini-grid tr:nth-child(6) {
+ border-bottom: solid 2px black;
+}
+
+table.games-listing {
+    width: 80%;
+}

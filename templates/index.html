@@ -58,8 +58,9 @@ $(document).ready(function() {
 </div>
 
 <div class="col-sm-9 col-md-10 main">
-
+    {% if game %}
     <h2 class='top-head'>Game {{ game.id }} ({{ game.level|slice:"2:25" }})</h2>
+    {% endif %}
     {% if errors %}
         {% for error in errors %}
                 <h5 style="text-align: left">{{ error }}</h5>
@@ -112,7 +113,7 @@ $(document).ready(function() {
                                             &nbsp;
                                         </div>
                                         <div class="pencil" >
-                                            <input class="pencil" size="9" maxlen="8" readonly >
+
                                         </div>
                                         <input size="1" maxlen="1" class="sudoku starter"
                                             value="{{ col.answer }}"
@@ -123,8 +124,8 @@ $(document).ready(function() {
                                             {% for pos in col.possibles %}{{ pos }}{% endfor %}
                                         </div>
                                         <div class="pencil" onclick="event.stopPropagation()">
-                                            <input class="pencil" name="pencil-row{{col.row}}col{{col.col}}" size="9" maxlen="8"
-                                            id="pencil-row{{col.row}}col{{col.col}}" value="{{ col.pencil }}">
+                                            <center><input class="pencil" name="pencil-row{{col.row}}col{{col.col}}" size="9" maxlen="8"
+                                            id="pencil-row{{col.row}}col{{col.col}}" value="{{ col.pencil }}"></center>
                                         </div>
                                         <input size="1" maxlen="1" class="sudoku {% if col.wrong %}fail{% else %}answer{% endif %}"
                                             id="answer-row{{col.row}}col{{col.col}}" name="answer-row{{col.row}}col{{col.col}}"
