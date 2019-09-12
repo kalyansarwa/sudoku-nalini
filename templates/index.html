@@ -59,7 +59,7 @@ $(document).ready(function() {
 
 <div class="col-sm-9 col-md-10 main">
     {% if game %}
-    <h2 class='top-head'>Game {{ game.id }} ({{ game.level|slice:"2:25" }})</h2>
+        <h2 class='top-head'>Game {{ game.id }} ({{ game.level|slice:"2:25" }})</h2>
     {% endif %}
     {% if errors %}
         {% for error in errors %}

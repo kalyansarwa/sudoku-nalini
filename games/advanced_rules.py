@@ -5,6 +5,20 @@ from games.sections import get_horz, get_vert, get_area, get_row, get_col, get_r
     get_col_pos, position_in, get_unsolved, get_possibles, get_only_area#, print_rows
 
 
+
+COLORS = [
+    ['blue', 'orange'],
+    ['purple', 'yellow'],
+    ['green', 'red'],
+    ['lightcyan', 'coral'],
+    ['palevioletred', 'lemonchiffon'],
+    ['greenyellow', 'rosybrown'],
+    ['lightblue', 'peachpuff'],
+    ['plum', 'lightyellow'],
+    ['lightgreen', 'lightpink'],
+]
+
+
 def xwing(grid):
     """ find candidates in a box shape """
 
@@ -288,178 +302,6 @@ def xywing_target(grid, target, square, other):
 
 
 
-def colors(grid):
-    """ find candidates in where there are only 2 in a related area,
-        then try to follow chain, alternating "colors"  """
-
-    solved = grid.solved
-    changed = len(grid.changed)
-
-    # go thru all the squares, all their possibles, and look for chains of only 2 in related squares
-
-    remaining = get_unsolved(grid)
-    for square in remaining:
-        unsolved = get_horz(grid, square, True)
-        for possible in square.possibles:
-            #print('Doing possible '+str(possible)+' for square '+str(square))
-            chain = find_pair(square, unsolved, possible)
-            if chain:
-                okay = find_next(grid, chain, possible, 'row')
-                if not okay:
-                    return okay
-                if grid.solved > solved or len(grid.changed) > changed:
-                    return True
-
-            #TO DO: find some way to get only unsolved
-            unsolved = get_vert(grid, square, True)
-            chain = find_pair(square, unsolved, possible)
-            if chain:
-                okay = find_next(grid, chain, possible, 'col')
-                if not okay:
-                    return okay
-                if grid.solved > solved or len(grid.changed) > changed:
-                    return True
-
-
-            unsolved = get_area(grid, square, True)
-            chain = find_pair(square, unsolved, possible)
-            if chain:
-                okay = find_next(grid, chain, possible, 'area')
-                if not okay or grid.solved > solved or len(grid.changed) > changed:
-                    return okay
-
-    return True
-
-
-
-def find_pair(square, unsolved, possible):
-    """ find squares that contain possible and stash them if there are only two """
-
-    squares = [square]
-
-    for uns in unsolved:
-        if possible in uns.possibles:
-            squares.append(uns)
-
-    if len(squares) == 2:
-        squares[0].color = True
-        squares[1].color = False
-        return squares
-
-    return None
-
-
-def sc_check_related(grid, related, candidate, chain, squares):
-    """ go thru the related squares checking for chaining """
-
-    for rel in related:
-        # changed this logic, its only 2 of the candidate in related
-        if candidate in rel.possibles:
-            got_it = check_chain(grid, chain, rel)
-            if got_it:
-                okay = rel.not_possible(grid, [candidate], True)
-                return got_it, okay
-            squares.append(rel)
-    return False, False
-
-
-
-def find_next(grid, chain, candidate, last_find):
-    """ look for next candidate square in chain """
-
-    end = chain[-1]
-
-    if last_find != 'row':
-        related = get_horz(grid, end, True)
-        squares = []
-
-        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
-
-        if got_it:
-            return okay
-
-        if len(squares) == 1 and not position_in(squares[0], chain):
-            squares[0].color = not end.color
-
-            cchain = copy.deepcopy(chain)
-            cchain.extend(squares)
-            okay = find_next(grid, cchain, candidate, 'row')
-            if not okay or not cchain:
-                chain.clear()
-                return okay
-
-    if last_find != 'col':
-        related = get_vert(grid, end, True)
-        squares = []
-
-        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
-
-        if got_it:
-            return okay
-
-        if len(squares) == 1 and not position_in(squares[0], chain):
-            squares[0].color = not end.color
-
-            cchain = copy.deepcopy(chain)
-            cchain.extend(squares)
-            okay = find_next(grid, cchain, candidate, 'row')
-            if not okay or not cchain:
-                chain.clear()
-                return okay
-
-    if last_find != 'area':
-
-        related = get_area(grid, end, True)
-        squares = []
-
-        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
-
-        if got_it:
-            return okay
-
-        if len(squares) == 1 and not position_in(squares[0], chain):
-            squares[0].color = not end.color
-
-            cchain = copy.deepcopy(chain)
-            cchain.extend(squares)
-            okay = find_next(grid, cchain, candidate, 'area')
-            if not okay or not cchain:
-                chain.clear()
-                return okay
-
-    return True
-
-
-
-def check_chain(grid, chain, square):
-    """ See if the new square end point can see both colors """
-
-    if position_in(square, chain):
-        return False
-
-    can_see = []
-
-
-    for chn in chain:
-        if (chn.row == square.row or chn.col == square.col):
-            can_see.append(chn.color)
-
-        related = get_only_area(grid, square, True)
-        if position_in(square, related):
-            can_see.append(chn.color)
-
-    if len(list(set(can_see))) > 1:
-        # if can see more than 1 color
-        #print('Colors chain=')
-        #print_row(chain)
-        #print('Colors target='+str(square)+' color='+str(square.color))
-
-        chain.clear()
-        return True
-
-    return False
-
-
 def swordfish(grid):
     """ find 2-3 occurances of candidate in 3 cols or 3 rows. Then remove extras
         from cols if found in 3 rows, or rows if found in cols """
@@ -549,3 +391,303 @@ def sf_check(sf_rc):
                         #print('SF slots = '+str(slots))
                         return test_set, slots
     return None, None
+
+
+def colorize(grid, chain, index):
+    """ turn True/False into colors """
+
+    for link in chain:
+        if link.color:
+            grid.grid[link.row][link.col].color = COLORS[index][0]
+        elif link.color is not None:
+            grid.grid[link.row][link.col].color = COLORS[index][1]
+
+def colors(grid):
+    """ find candidates in where there are only 2 in a related area,
+        then try to follow chain, alternating "colors"  """
+
+    solved = grid.solved
+    changed = len(grid.changed)
+
+    # go thru all the squares, all their possibles, and look for chains of only 2 in related squares
+
+    remaining = get_unsolved(grid)
+    for square in remaining:
+        unsolved = get_horz(grid, square, True)
+        for possible in square.possibles:
+            #print('Doing possible '+str(possible)+' for square '+str(square))
+            chain = find_pair(square, unsolved, possible)
+            if chain:
+                okay = find_next(grid, chain, possible, 'row')
+                if not okay:
+                    return okay
+                if grid.solved > solved or len(grid.changed) > changed:
+                    return True
+
+            #TO DO: find some way to get only unsolved
+            unsolved = get_vert(grid, square, True)
+            chain = find_pair(square, unsolved, possible)
+            if chain:
+                okay = find_next(grid, chain, possible, 'col')
+                if not okay:
+                    return okay
+                if grid.solved > solved or len(grid.changed) > changed:
+                    return True
+
+
+            unsolved = get_area(grid, square, True)
+            chain = find_pair(square, unsolved, possible)
+            if chain:
+                okay = find_next(grid, chain, possible, 'area')
+                if not okay or grid.solved > solved or len(grid.changed) > changed:
+                    return okay
+
+    return True
+
+
+
+def find_pair(square, unsolved, possible):
+    """ find squares that contain possible and stash them if there are only two """
+
+    squares = [square]
+
+    for uns in unsolved:
+        if possible in uns.possibles:
+            squares.append(uns)
+
+    if len(squares) == 2:
+        squares[0].color = True
+        squares[1].color = False
+        return squares
+
+    return None
+
+
+
+def sc_check_related(grid, related, candidate, chain, squares):
+    """ go thru the related squares checking for chaining """
+
+    for rel in related:
+        # changed this logic, its only 2 of the candidate in related
+        if candidate in rel.possibles:
+            got_it = check_chain(grid, chain, rel, candidate)
+            if got_it:
+                # remove the candidate from all of the chain sharing that color
+                for link in chain:
+                    if link.color == rel.color:
+                        okay = link.not_possible(grid, [candidate], True)
+                        if not okay:
+                            return got_it, okay
+                chain.clear()
+            squares.append(rel)
+    return False, True
+
+
+
+def find_next(grid, chain, candidate, last_find):
+    """ look for next candidate square in chain """
+
+    end = chain[-1]
+
+    if last_find != 'row':
+        related = get_horz(grid, end, True)
+        squares = []
+
+        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
+
+        if got_it:
+            return okay
+
+        if len(squares) == 1 and not position_in(squares[0], chain):
+            squares[0].color = not end.color
+
+            cchain = copy.deepcopy(chain)
+            cchain.extend(squares)
+            okay = find_next(grid, cchain, candidate, 'row')
+            if not okay or not cchain:
+                chain.clear()
+                return okay
+
+    if last_find != 'col':
+        related = get_vert(grid, end, True)
+        squares = []
+
+        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
+
+        if got_it:
+            return okay
+
+        if len(squares) == 1 and not position_in(squares[0], chain):
+            squares[0].color = not end.color
+
+            cchain = copy.deepcopy(chain)
+            cchain.extend(squares)
+            okay = find_next(grid, cchain, candidate, 'row')
+            if not okay or not cchain:
+                chain.clear()
+                return okay
+
+    if last_find != 'area':
+
+        related = get_area(grid, end, True)
+        squares = []
+
+        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
+
+        if got_it:
+            return okay
+
+        if len(squares) == 1 and not position_in(squares[0], chain):
+            squares[0].color = not end.color
+
+            cchain = copy.deepcopy(chain)
+            cchain.extend(squares)
+            okay = find_next(grid, cchain, candidate, 'area')
+            if not okay or not cchain:
+                chain.clear()
+                return okay
+
+    return True
+
+
+
+def check_chain(grid, chain, square, candidate):
+    """ See if the new square end point can see both colors """
+
+    if position_in(square, chain):
+        return False
+
+    can_see = []
+
+    for chn in chain:
+        if (chn.row == square.row or chn.col == square.col):
+            can_see.append(chn.color)
+
+        related = get_only_area(grid, square, True)
+        if position_in(square, related):
+            can_see.append(chn.color)
+
+    if len(list(set(can_see))) > 1:
+        # if can see more than 1 color
+        #print('Colors chain=')
+        #print_row(chain)
+        #print('Colors target='+str(square)+' color='+str(square.color))
+        #colorize(grid, chain, candidate)
+        #chain.clear()
+        return True
+
+    return False
+
+
+
+def multiple_colors(grid):
+    """ find multiple chains for candidates, then see if one chain relates to the other so
+        as to eliminate the candidate in other (non-chain) cells. Game 71 has this for 6s  """
+
+
+    solved = grid.solved
+    changed = len(grid.changed)
+
+    # go thru all the squares, all their possibles, and look for chains of only 2 in related squares
+    # unlike colors, stash the chains
+
+    chains = []
+
+    remaining = get_unsolved(grid)
+    for square in remaining:
+        for possible in square.possibles:
+            #print('Doing possible '+str(possible)+' for square '+str(square))
+            unsolved = get_horz(grid, square, True)
+            chain = find_pair(square, unsolved, possible)
+            if chain:
+                okay = mc_find_next(grid, chain, possible, 'row')
+                if not okay:
+                    return okay
+                if grid.solved > solved or len(grid.changed) > changed:
+                    return True
+
+            #TO DO: find some way to get only unsolved
+            unsolved = get_vert(grid, square, True)
+            chain = find_pair(square, unsolved, possible)
+            if chain:
+                okay = mc_find_next(grid, chain, possible, 'col')
+                if not okay:
+                    return okay
+                if grid.solved > solved or len(grid.changed) > changed:
+                    return True
+
+
+            unsolved = get_area(grid, square, True)
+            chain = find_pair(square, unsolved, possible)
+            if chain:
+                okay = mc_find_next(grid, chain, possible, 'area')
+                if not okay or grid.solved > solved or len(grid.changed) > changed:
+                    return okay
+
+    return True
+
+
+def mc_find_next(grid, chain, candidate, last_find):
+    """ look for next candidate square in chain """
+
+    end = chain[-1]
+
+    if last_find != 'row':
+        related = get_horz(grid, end, True)
+        squares = []
+
+        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
+
+        if got_it:
+            return okay
+
+        if len(squares) == 1 and not position_in(squares[0], chain):
+            squares[0].color = not end.color
+
+            cchain = copy.deepcopy(chain)
+            cchain.extend(squares)
+            okay = find_next(grid, cchain, candidate, 'row')
+            if not okay or not cchain:
+                chain.clear()
+                return okay
+
+    if last_find != 'col':
+        related = get_vert(grid, end, True)
+        squares = []
+
+        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
+
+        if got_it:
+            return okay
+
+        if len(squares) == 1 and not position_in(squares[0], chain):
+            squares[0].color = not end.color
+
+            cchain = copy.deepcopy(chain)
+            cchain.extend(squares)
+            okay = find_next(grid, cchain, candidate, 'row')
+            if not okay or not cchain:
+                chain.clear()
+                return okay
+
+    if last_find != 'area':
+
+        related = get_area(grid, end, True)
+        squares = []
+
+        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
+
+        if got_it:
+            return okay
+
+        if len(squares) == 1 and not position_in(squares[0], chain):
+            squares[0].color = not end.color
+
+            cchain = copy.deepcopy(chain)
+            cchain.extend(squares)
+            okay = find_next(grid, cchain, candidate, 'area')
+            if not okay or not cchain:
+                chain.clear()
+                return okay
+
+    return True

@@ -135,8 +135,9 @@ class Square():
 
     def as_json(self):
         """ return square as json """
+
         return dict(row=self.row, col=self.col, possible=self.possibles, answer=self.answer,
-                    wrong=self.wrong, pencil=self.pencil, starter=self.starter)
+                    wrong=self.wrong, pencil=self.pencil, starter=self.starter, color=self.color)
 
 
 

@@ -90,6 +90,11 @@ async function paint(j_changed) {
 
     entry = j_changed.shift();
     if (entry.starter == 0) {
+        if ( entry.color ){
+            console.log('got color '+entry.color);
+            var cell = document.getElementById('cell-row' + entry.row + 'col' + entry.col);
+            colorCell(cell, entry.color);
+        }
         var div = document.getElementById('hints-row' + entry.row + 'col' + entry.col);
         div.innerHTML = entry.possible.join('');
         var inp = document.getElementById('answer-row' + entry.row + 'col' + entry.col);
@@ -203,6 +208,26 @@ function colorMe(clicked) {
     } else {
         console.log("trying to uncolor")
         obj.style.backgroundColor = 'inherit';
+    }
+}
+
+
+function colorCell(obj, color) {
+
+    var theColors = {
+        "green": "rgb(204, 255, 204)",
+        "blue": "rgb(166, 255, 243)",
+        "purple": "rgb(213, 203, 255)",
+        "red": "rgb(255, 194, 179)",
+        "orange": "rgb(255, 205, 112)",
+        "yellow": "rgb(242, 255, 134)"
+        }
+
+    console.log("current color="+obj.style.backgroundColor);
+    if (['green', 'blue', 'purple', 'red', 'orange', 'yellow'].includes(color)) {
+        obj.style.backgroundColor = theColors[color];
+    } else {
+        obj.style.backgroundColor = color;
     }
 }
 
