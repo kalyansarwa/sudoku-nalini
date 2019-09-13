@@ -10,7 +10,7 @@ class Person(models.Model):
     """ Model class for Person """
 
     id = models.AutoField(primary_key=True, blank=True)
-    user = models.ForeignKey(User, null=False, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,  null=False, blank=True)
 
     def get_fields(self):
         """ return field values array """
