@@ -25,7 +25,7 @@ class Game(models.Model):
     given = models.TextField(null=True, blank=True)
     shared = models.BooleanField(default=False)
     invalid = models.BooleanField(default=False)
-    owner = models.ForeignKey(User, null=False, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def get_fields(self):
         """ return field values array """
