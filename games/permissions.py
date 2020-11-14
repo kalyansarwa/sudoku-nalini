@@ -27,7 +27,7 @@ def get_user_permissions(user, content_type):
 def get_view_filters(request, model, kwargs):
     """ provide filters to screen what user can see """
 
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         kwargs['id'] = -1
         return
 
@@ -50,5 +50,8 @@ def get_view_filters(request, model, kwargs):
     # check for ownership
     if 'view_own' in perms:
         kwargs['owner'] = request.user.id
+
+    else:
+        kwargs['id'] = -1
 
     return

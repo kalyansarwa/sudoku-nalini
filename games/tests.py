@@ -12,7 +12,6 @@ class SimpleTestCase(TestCase):
     """ Test Easy Sudoku """
 
 
-
     def setUp(self):
         """ Test Game Creation """
         User.objects.create(first_name='Testy', last_name='Test', username='testytest',

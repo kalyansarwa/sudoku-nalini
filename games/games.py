@@ -1,4 +1,13 @@
-""" This module has the workhorse functions for games """
+""" This module has the workhorse functions for games
+
+To solve a puzzle, the solve_it function will go thru the RULES array of functions, arranged from
+simpliest strategy to most complicated, implementing the command design pattern. If any strategy
+results in a change solving the square or reducing possibles, then solve_it falls back to the
+simpliest strategy.
+
+If solve_it fails to solve a sudoku and the user and checked "use brute force", solve_it uses
+recursion to try all solutions for the remaining squares.
+"""
 import re
 import math
 import copy
@@ -7,11 +16,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from games.models import Game, Grid
 from games.rules import not_me, only_me, get_related, blockers, twins, hidden_twins, \
     triplets, hidden_triplets, quads, hidden_quads
-from games.advanced_rules import xwing, xywing, colors, swordfish
+from games.advanced_rules import xwing, xywing, simple_colors, swordfish
+
 
 
 RULES = [not_me, only_me, twins, blockers, hidden_twins, triplets, hidden_triplets,
-         quads, hidden_quads, xwing, xywing, colors, swordfish
+         quads, hidden_quads, xwing, xywing, swordfish, simple_colors
          ]
 
 

@@ -58,8 +58,9 @@ $(document).ready(function() {
 </div>
 
 <div class="col-sm-9 col-md-10 main">
-
-    <h2 class='top-head'>Game {{ game.id }} ({{ game.level|slice:"2:25" }})</h2>
+    {% if game %}
+        <h2 class='top-head'>Game {{ game.id }} ({{ game.level|slice:"2:25" }})</h2>
+    {% endif %}
     {% if errors %}
         {% for error in errors %}
                 <h5 style="text-align: left">{{ error }}</h5>
@@ -77,11 +78,14 @@ $(document).ready(function() {
 
     <input class="btn btn-success btn-sm" type="submit" name="solve" id="update" value="Solve" onClick="busy(this)" />
     <input class="btn btn-info btn-sm" type="submit" name="check" id="check" value="Check" onClick="busy(this)" />
-    {% if checked is not None %}
-        {% if checked %}<i style="color:green;font-size:20px;" class="fa fa-check">&emsp;</i>
-        {% else %}<i style="color:red;font-size:20px;" class="fa fa-times"></i>&emsp;{% endif %}
-    {% else %}&emsp;&emsp;&emsp;&nbsp;
-    {% endif %}
+    <span id="feedback">
+        {% if checked is not None %}
+            {% if checked %}<i style="color:green;font-size:20px;" class="fa fa-check"></i>
+            {% if done %}Congratulations! You did it!{% else %}So far so good...{% endif %}&emsp;
+            {% else %}<i style="color:red;font-size:20px;" class="fa fa-times"></i>&emsp;{% endif %}
+        {% else %}&emsp;&emsp;&emsp;&nbsp;
+        {% endif %}
+    </span>
     <input class="btn btn-primary btn-sm pull-center" type="button" name="print" id="print" value="Print" onClick="printGrid()" />
     <input type="hidden" name="game_id" value="{{ game.id }}">
     <div id="theGrid" class="table-responsive">
@@ -112,7 +116,7 @@ $(document).ready(function() {
                                             &nbsp;
                                         </div>
                                         <div class="pencil" >
-                                            <input class="pencil" size="9" maxlen="8" readonly >
+
                                         </div>
                                         <input size="1" maxlen="1" class="sudoku starter"
                                             value="{{ col.answer }}"
@@ -123,8 +127,8 @@ $(document).ready(function() {
                                             {% for pos in col.possibles %}{{ pos }}{% endfor %}
                                         </div>
                                         <div class="pencil" onclick="event.stopPropagation()">
-                                            <input class="pencil" name="pencil-row{{col.row}}col{{col.col}}" size="9" maxlen="8"
-                                            id="pencil-row{{col.row}}col{{col.col}}" value="{{ col.pencil }}">
+                                            <center><input class="pencil" name="pencil-row{{col.row}}col{{col.col}}" size="9" maxlen="8"
+                                            id="pencil-row{{col.row}}col{{col.col}}" value="{{ col.pencil }}"></center>
                                         </div>
                                         <input size="1" maxlen="1" class="sudoku {% if col.wrong %}fail{% else %}answer{% endif %}"
                                             id="answer-row{{col.row}}col{{col.col}}" name="answer-row{{col.row}}col{{col.col}}"

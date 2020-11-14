@@ -1,12 +1,33 @@
 """ This module has more advanced rules functions for games """
+from collections import defaultdict
 import copy
 
-from games.sections import get_horz, get_vert, get_area, get_row, get_col, get_row_pos, \
-    get_col_pos, position_in, get_unsolved, get_possibles, get_only_area#, print_rows
+from games.sections import get_horz, get_vert, get_row, get_col, get_row_pos, \
+    get_col_pos, get_unsolved, get_possibles#, print_row
+
+
+
+COLORS = [
+    ['blue', 'orange'],
+    ['purple', 'yellow'],
+    ['green', 'red'],
+    ['lightcyan', 'coral'],
+    ['palevioletred', 'lemonchiffon'],
+    ['greenyellow', 'rosybrown'],
+    ['lightblue', 'peachpuff'],
+    ['plum', 'lightyellow'],
+    ['lightgreen', 'lightpink'],
+]
 
 
 def xwing(grid):
-    """ find candidates in a box shape """
+    """ XWing is a technique for removing possibles, not finding a direct solution.
+        If you can find exactly two matching candidates in a row, and then
+        find exactly two in another row (in a box shape), then any other of the same candidate
+        above or below in the same to columns can be eliminated from possible.
+
+        If you find a box in columns, the same is true for rows.
+        """
 
     for i in range(0, 9):
         unsolved, possibles = get_row_pos(grid, i)
@@ -14,7 +35,7 @@ def xwing(grid):
             firsts = xwing_check(unsolved, possible)
 
             if firsts:
-                okay = xwing_row_check(grid, firsts, possible)
+                xwing_row_check(grid, firsts, possible)
 
     for i in range(0, 9):
         unsolved, possibles = get_col_pos(grid, i)
@@ -22,9 +43,7 @@ def xwing(grid):
             firsts = xwing_check(unsolved, possible)
 
             if firsts:
-                okay = xwing_col_check(grid, firsts, possible)
-                if not okay:
-                    return False
+                xwing_col_check(grid, firsts, possible)
 
     return True
 
@@ -50,9 +69,7 @@ def remove_excepts(grid, squares, possible, excepts):
     for square in squares:
         if square not in excepts and  possible in square.possibles:
 
-            okay = square.not_possible(grid, [possible], True)
-            if not okay:
-                return False
+            square.not_possible(grid, [possible], True)
 
     return True
 
@@ -88,15 +105,11 @@ def xwing_row_check(grid, firsts, possible):
 
     squares = get_col(grid, firsts[0].col)
 
-    okay = remove_excepts(grid, squares, possible, [firsts[0], seconds[0]])
-    if not okay:
-        return False
+    remove_excepts(grid, squares, possible, [firsts[0], seconds[0]])
 
     squares = get_col(grid, firsts[1].col)
 
-    okay = remove_excepts(grid, squares, possible, [firsts[1], seconds[1]])
-    if not okay:
-        return False
+    remove_excepts(grid, squares, possible, [firsts[1], seconds[1]])
 
     return True
 
@@ -131,22 +144,12 @@ def xwing_col_check(grid, firsts, possible):
     if len(seconds) != 2:
         return True
 
-    #print('got col xwing with '+str(possible)+' starting with :')
-    #print(str(firsts[0]))
-    #print(str(firsts[1]))
-    #print(str(seconds[0]))
-    #print(str(seconds[1]))
-
     squares = get_row(grid, firsts[0].row)
 
-    okay = remove_excepts(grid, squares, possible, [firsts[0], seconds[0]])
-    if not okay:
-        return False
+    remove_excepts(grid, squares, possible, [firsts[0], seconds[0]])
 
     squares = get_row(grid, firsts[1].row)
-    okay = remove_excepts(grid, squares, possible, [firsts[1], seconds[1]])
-    if not okay:
-        return False
+    remove_excepts(grid, squares, possible, [firsts[1], seconds[1]])
 
     return True
 
@@ -161,9 +164,7 @@ def xywing(grid):
             continue
         for j, square in enumerate(unsolved):
             if len(square.possibles) == 2:
-                okay = xywing_check(grid, square, unsolved[j+1:])
-                if not okay:
-                    return False
+                xywing_check(grid, square, unsolved[j+1:])
 
     for i in range(0, 8):
         unsolved, possibles = get_col_pos(grid, i)
@@ -171,9 +172,7 @@ def xywing(grid):
             continue
         for j, square in enumerate(unsolved):
             if len(square.possibles) == 2:
-                okay = xywing_check(grid, square, unsolved[j+1:])
-                if not okay:
-                    return False
+                xywing_check(grid, square, unsolved[j+1:])
 
     return True
 
@@ -195,11 +194,9 @@ def xywing_check(grid, square, unsolved):
                 if not pair:
                     continue
                 if firsts[0].row == firsts[1].row:
-                    okay = xywing_y_col(grid, firsts, pair)
+                    xywing_y_col(grid, firsts, pair)
                 elif firsts[0].col == firsts[1].col:
-                    okay = xywing_y_row(grid, firsts, pair)
-                if not okay:
-                    return False
+                    xywing_y_row(grid, firsts, pair)
 
     return True
 
@@ -214,15 +211,9 @@ def xywing_y_col(grid, firsts, pair):
 
         if pair.issubset(square.possibles) and pair.issuperset(square.possibles):
 
-            #print('found bottom: '+str(square))
-
             target = grid.grid[square.row][firsts[1].col]
 
-            #print('found target: '+str(target))
-
-            okay = xywing_target(grid, target, square, firsts[1])
-            if not okay:
-                return False
+            xywing_target(grid, target, square, firsts[1])
 
     related = get_vert(grid, firsts[1])
 
@@ -232,11 +223,7 @@ def xywing_y_col(grid, firsts, pair):
 
             target = grid.grid[square.row][firsts[0].col]
 
-            #print('found target: '+str(target))
-
-            okay = xywing_target(grid, target, square, firsts[0])
-            if not okay:
-                return False
+            xywing_target(grid, target, square, firsts[0])
 
     return True
 
@@ -253,9 +240,7 @@ def xywing_y_row(grid, firsts, pair):
 
             target = grid.grid[square.col][firsts[1].row]
 
-            okay = xywing_target(grid, target, square, firsts[1])
-            if not okay:
-                return False
+            xywing_target(grid, target, square, firsts[1])
 
     related = get_horz(grid, firsts[1])
 
@@ -265,11 +250,7 @@ def xywing_y_row(grid, firsts, pair):
 
             target = grid.grid[square.col][firsts[0].row]
 
-            okay = xywing_target(grid, target, square, firsts[0])
-            if not okay:
-                return False
-
-    return True
+            xywing_target(grid, target, square, firsts[0])
 
 
 
@@ -279,190 +260,13 @@ def xywing_target(grid, target, square, other):
     shared = set(square.possibles).intersection(other.possibles)
 
     if shared:
-        #print('Removing '+str(shared)+' from '+str(target))
-        okay = target.not_possible(grid, list(shared), True)
-        if not okay:
-            return False
+        target.not_possible(grid, list(shared), True)
 
-    return True
-
-
-
-def colors(grid):
-    """ find candidates in where there are only 2 in a related area,
-        then try to follow chain, alternating "colors"  """
-
-    solved = grid.solved
-    changed = len(grid.changed)
-
-    # go thru all the squares, all their possibles, and look for chains of only 2 in related squares
-
-    remaining = get_unsolved(grid)
-    for square in remaining:
-        unsolved = get_horz(grid, square, True)
-        for possible in square.possibles:
-            #print('Doing possible '+str(possible)+' for square '+str(square))
-            chain = find_pair(square, unsolved, possible)
-            if chain:
-                okay = find_next(grid, chain, possible, 'row')
-                if not okay:
-                    return okay
-                if grid.solved > solved or len(grid.changed) > changed:
-                    return True
-
-            #TO DO: find some way to get only unsolved
-            unsolved = get_vert(grid, square, True)
-            chain = find_pair(square, unsolved, possible)
-            if chain:
-                okay = find_next(grid, chain, possible, 'col')
-                if not okay:
-                    return okay
-                if grid.solved > solved or len(grid.changed) > changed:
-                    return True
-
-
-            unsolved = get_area(grid, square, True)
-            chain = find_pair(square, unsolved, possible)
-            if chain:
-                okay = find_next(grid, chain, possible, 'area')
-                if not okay or grid.solved > solved or len(grid.changed) > changed:
-                    return okay
-
-    return True
-
-
-
-def find_pair(square, unsolved, possible):
-    """ find squares that contain possible and stash them if there are only two """
-
-    squares = [square]
-
-    for uns in unsolved:
-        if possible in uns.possibles:
-            squares.append(uns)
-
-    if len(squares) == 2:
-        squares[0].color = True
-        squares[1].color = False
-        return squares
-
-    return None
-
-
-def sc_check_related(grid, related, candidate, chain, squares):
-    """ go thru the related squares checking for chaining """
-
-    for rel in related:
-        # changed this logic, its only 2 of the candidate in related
-        if candidate in rel.possibles:
-            got_it = check_chain(grid, chain, rel)
-            if got_it:
-                okay = rel.not_possible(grid, [candidate], True)
-                return got_it, okay
-            squares.append(rel)
-    return False, False
-
-
-
-def find_next(grid, chain, candidate, last_find):
-    """ look for next candidate square in chain """
-
-    end = chain[-1]
-
-    if last_find != 'row':
-        related = get_horz(grid, end, True)
-        squares = []
-
-        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
-
-        if got_it:
-            return okay
-
-        if len(squares) == 1 and not position_in(squares[0], chain):
-            squares[0].color = not end.color
-
-            cchain = copy.deepcopy(chain)
-            cchain.extend(squares)
-            okay = find_next(grid, cchain, candidate, 'row')
-            if not okay or not cchain:
-                chain.clear()
-                return okay
-
-    if last_find != 'col':
-        related = get_vert(grid, end, True)
-        squares = []
-
-        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
-
-        if got_it:
-            return okay
-
-        if len(squares) == 1 and not position_in(squares[0], chain):
-            squares[0].color = not end.color
-
-            cchain = copy.deepcopy(chain)
-            cchain.extend(squares)
-            okay = find_next(grid, cchain, candidate, 'row')
-            if not okay or not cchain:
-                chain.clear()
-                return okay
-
-    if last_find != 'area':
-
-        related = get_area(grid, end, True)
-        squares = []
-
-        got_it, okay = sc_check_related(grid, related, candidate, chain, squares)
-
-        if got_it:
-            return okay
-
-        if len(squares) == 1 and not position_in(squares[0], chain):
-            squares[0].color = not end.color
-
-            cchain = copy.deepcopy(chain)
-            cchain.extend(squares)
-            okay = find_next(grid, cchain, candidate, 'area')
-            if not okay or not cchain:
-                chain.clear()
-                return okay
-
-    return True
-
-
-
-def check_chain(grid, chain, square):
-    """ See if the new square end point can see both colors """
-
-    if position_in(square, chain):
-        return False
-
-    can_see = []
-
-
-    for chn in chain:
-        if (chn.row == square.row or chn.col == square.col):
-            can_see.append(chn.color)
-
-        related = get_only_area(grid, square, True)
-        if position_in(square, related):
-            can_see.append(chn.color)
-
-    if len(list(set(can_see))) > 1:
-        # if can see more than 1 color
-        #print('Colors chain=')
-        #print_row(chain)
-        #print('Colors target='+str(square)+' color='+str(square.color))
-
-        chain.clear()
-        return True
-
-    return False
 
 
 def swordfish(grid):
-    """ find 2-3 occurances of candidate in 3 cols or 3 rows. Then remove extras
-        from cols if found in 3 rows, or rows if found in cols """
+    """ This is a strategy to remove possibles. Find 2-3 occurances of candidate in 3 cols or 3
+        rows. Then remove extras from cols if found in 3 rows, or rows if found in cols """
 
     solved = grid.solved
     changed = len(grid.changed)
@@ -470,11 +274,8 @@ def swordfish(grid):
     all_possibles = get_possibles(grid)
 
     for possible in all_possibles:
-        #print('swordfish trying with '+str(possible))
-        okay = sfish_possible(grid, possible)
+        sfish_possible(grid, possible)
 
-        if not okay:
-            return False
         if grid.solved > solved:
             #print('Swordfish solved '+str(grid.solved-solved)+' squares')
             return True
@@ -483,6 +284,7 @@ def swordfish(grid):
             return True
 
     return True
+
 
 
 def sfish_possible(grid, possible):
@@ -498,10 +300,6 @@ def sfish_possible(grid, possible):
             sf_rows[square.row].append(square.col)
             sf_cols[square.col].append(square.row)
 
-    #print('SF possible: '+str(possible))
-    #print('sf_rows='+str(sf_rows))
-    #print('sf_cols='+str(sf_cols))
-
     # test for rows-wise swordfish
     sf_set, slots = sf_check(sf_rows)
     if sf_set:
@@ -510,9 +308,7 @@ def sfish_possible(grid, possible):
             squares = get_col(grid, sfs)
             for square in squares:
                 if square.row not in slots:
-                    okay = square.not_possible(grid, [possible], True)
-                    if not okay:
-                        return False
+                    square.not_possible(grid, [possible], True)
 
     # test for cols-wise swordfish
     sf_set, slots = sf_check(sf_cols)
@@ -522,9 +318,7 @@ def sfish_possible(grid, possible):
             squares = get_row(grid, sfs)
             for square in squares:
                 if square.col not in slots:
-                    okay = square.not_possible(grid, [possible], True)
-                    if not okay:
-                        return False
+                    square.not_possible(grid, [possible], True)
 
     return True
 
@@ -536,16 +330,224 @@ def sf_check(sf_rc):
     for i in range(0, 9):
         if len(sf_rc[i]) > 1 and len(sf_rc[i]) < 4:
             test_set = sf_rc[i]
-            #print('initial test_set='+str(test_set))
             slots = [i]
             for j in range(0, 9):
                 if i != j and len(sf_rc[j]) > 1 and len(sf_rc[j]) < 4 and \
                     len(list(set(test_set+sf_rc[j]))) < 4:
                     slots.append(j)
                     test_set = list(set(test_set+sf_rc[j]))
-                    #print('current test_set='+str(test_set))
                     if len(slots) == 3 and len(test_set) == 3:
-                        #print('SF sf_set ='+str(test_set))
-                        #print('SF slots = '+str(slots))
                         return test_set, slots
     return None, None
+
+
+def colorize(grid, chain, index):
+    """ turn True/False into colors """
+
+    for link in chain:
+        if link.color:
+            grid.grid[link.row][link.col].color = COLORS[index][0]
+        elif link.color is not None:
+            grid.grid[link.row][link.col].color = COLORS[index][1]
+
+
+
+def simple_colors(grid):
+    """ AKA Simple Chaining. This is a strategy to remove possibles. Find possibles in where there
+        are only 2 in a related area, then try to follow chain to the next 2 only, alternating
+        "colors". Do the whole chain, then if any color appears twice in a related area, then the
+        possible in all chained squares of that color are invalid and can be removed. """
+
+    remaining = get_unsolved(grid)
+    for square in remaining:
+
+        for possible in square.possibles:
+            chain = [{'square': square, 'color':True, 'type': None}]
+            chains = [chain]
+
+            while chains:
+                # chains exists because its possible to have alternate chains staring from the same
+                # square. This is not yet implemented
+
+                chain = chains.pop(0)
+
+                find_next(remaining, chain, chains, possible)
+
+                if len(chain) > 3:
+                    if check_chain(grid, remaining, chain, possible):
+                        return True
+
+    return True
+
+
+
+
+def find_next(remaining, chain, chains, possible):
+    """ look for next candidate square to put in chain """
+
+    end = chain[-1]
+
+    if end['type'] != 'row':
+        squares = []
+        for square in remaining:
+            if square != end['square'] and square.row == end['square'].row and \
+                possible in square.possibles:
+                squares.append(square)
+        if len(squares) == 1 and not in_chain(squares[0], chain):
+            chain.append({'square': squares[0], 'color':not end['color'], 'type': 'row'})
+            find_next(remaining, chain, chains, possible)
+            return
+
+    if end['type'] != 'col':
+        squares = []
+        for square in remaining:
+            if square != end['square'] and square.col == end['square'].col and \
+                possible in square.possibles:
+                squares.append(square)
+        if len(squares) == 1 and not in_chain(squares[0], chain):
+            chain.append({'square': squares[0], 'color':not end['color'], 'type': 'col'})
+            find_next(remaining, chain, chains, possible)
+            return
+
+    if end['type'] != 'area':
+        squares = []
+        for square in remaining:
+            if square != end['square'] and square.area == end['square'].area and \
+                possible in square.possibles:
+                squares.append(square)
+        if len(squares) == 1 and not in_chain(squares[0], chain):
+            chain.append({'square': squares[0], 'color':not end['color'], 'type': 'area'})
+            find_next(remaining, chain, chains, possible)
+            return
+
+    return
+
+
+
+def in_chain(square, chain):
+    """ check if the square is already in the chain """
+
+    for link in chain:
+        if link['square'] == square:
+            return True
+    return False
+
+
+def print_chain(chain):
+    """ for debugging """
+
+    print(', '.join('square='+str(link['square'])+' color='+str(link['color']) for link in chain))
+
+
+
+def color_dicts(chain):
+    """ create summary of where colors are in chain """
+
+    color1 = defaultdict(int)
+    color2 = defaultdict(int)
+
+    for chn in chain:
+        if chn['color']:
+            key = 'r'+str(chn['square'].row)
+            color1[key] += 1
+            key = 'c'+str(chn['square'].col)
+            color1[key] += 1
+            key = 'a'+str(chn['square'].area)
+            color1[key] += 1
+        else:
+            key = 'r'+str(chn['square'].row)
+            color2[key] += 1
+            key = 'c'+str(chn['square'].col)
+            color2[key] += 1
+            key = 'a'+str(chn['square'].area)
+            color2[key] += 1
+
+    return color1, color2
+
+
+
+def check_chain(grid, remaining, chain, possible):
+    """ Definition 1: See if both colors are present in the same unit. If so, that color is
+        invalid, remove possibles from all of that color in the chain.
+        Definition 2: Can any of the remaining squares with possible see both colors. If so,
+        remove THAT square's possible """
+
+    #print('checking chain with possible '+str(possible))
+    #print_chain(chain)
+
+    color1, color2 = color_dicts(chain)
+
+    # Definition 1: See if both colors are present in the same unit
+
+    for key, val in color1.items():
+        if val > 1:
+            # purge all of the possibles for this color out of the chain
+            for chn in chain:
+                if chn['color']:
+                    chn['square'].color = 'red'
+                    chn['square'].not_possible(grid, [possible], True)
+                else:
+                    chn['square'].color = 'green'
+                    rcopy = copy.deepcopy(chn['square'])
+                    grid.changed.append(rcopy)
+
+            return True
+
+    for key, val in color2.items():
+        if val > 1:
+            # purge all of the possibles for this color out of the chain
+            for chn in chain:
+                if not chn['color']:
+                    chn['square'].color = 'red'
+                    chn['square'].not_possible(grid, [possible], True)
+                else:
+                    chn['square'].color = 'green'
+                    rcopy = copy.deepcopy(chn['square'])
+                    grid.changed.append(rcopy)
+
+            return True
+
+
+    # Definition 2: Can any of the remaining squares with possible see both colors
+
+    for rem in remaining:
+        if possible not in rem.possibles or in_chain(rem, chain):
+            continue
+        clr1 = 0
+        clr2 = 0
+        # get all colors rem can see
+        for key, val in color1.items():
+            if key == 'r'+str(rem.row):
+                clr1 += 1
+            elif key == 'c'+str(rem.col):
+                clr1 += 1
+            elif key == 'a'+str(rem.area):
+                clr1 += 1
+
+        for key, val in color2.items():
+            if key == 'r'+str(rem.row):
+                clr2 += 1
+            elif key == 'c'+str(rem.col):
+                clr2 += 1
+            elif key == 'a'+str(rem.area):
+                clr2 += 1
+
+        if clr1 and clr2:
+            rem.not_possible(grid, [possible], True)
+            return True
+
+    return False
+
+
+
+def multiple_colors(grid):
+    """ find multiple chains for candidates, then see if one chain relates to the other so
+        as to eliminate the candidate in other (non-chain) cells. Game 71 has this for 6s
+        NOT FINISHED """
+
+
+    # go thru all the squares, all their possibles, and look for chains of only 2 in related squares
+    # unlike colors, stash the chains
+
+
+    return True
