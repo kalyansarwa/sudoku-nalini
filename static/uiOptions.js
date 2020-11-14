@@ -28,6 +28,8 @@ function pencilOptions() {
     }
 }
 
+
+
 function hintsOptions() {
     var buttons = document.getElementById('form-hints')
     if (!buttons) { return; }
@@ -80,6 +82,8 @@ function busy(btn) {
 }
 
 
+
+// This whole construct causes the returned solution to paint in slo mo on the screen
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function paint(j_changed) {

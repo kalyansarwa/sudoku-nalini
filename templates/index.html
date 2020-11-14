@@ -78,11 +78,14 @@ $(document).ready(function() {
 
     <input class="btn btn-success btn-sm" type="submit" name="solve" id="update" value="Solve" onClick="busy(this)" />
     <input class="btn btn-info btn-sm" type="submit" name="check" id="check" value="Check" onClick="busy(this)" />
-    {% if checked is not None %}
-        {% if checked %}<i style="color:green;font-size:20px;" class="fa fa-check">&emsp;</i>
-        {% else %}<i style="color:red;font-size:20px;" class="fa fa-times"></i>&emsp;{% endif %}
-    {% else %}&emsp;&emsp;&emsp;&nbsp;
-    {% endif %}
+    <span id="feedback">
+        {% if checked is not None %}
+            {% if checked %}<i style="color:green;font-size:20px;" class="fa fa-check"></i>
+            {% if done %}Congratulations! You did it!{% else %}So far so good...{% endif %}&emsp;
+            {% else %}<i style="color:red;font-size:20px;" class="fa fa-times"></i>&emsp;{% endif %}
+        {% else %}&emsp;&emsp;&emsp;&nbsp;
+        {% endif %}
+    </span>
     <input class="btn btn-primary btn-sm pull-center" type="button" name="print" id="print" value="Print" onClick="printGrid()" />
     <input type="hidden" name="game_id" value="{{ game.id }}">
     <div id="theGrid" class="table-responsive">

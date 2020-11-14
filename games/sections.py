@@ -53,6 +53,7 @@ def get_area(grid, square, unsolved=False):
     return related
 
 
+
 def get_related(grid, square, unsolved=False):
     """ visit the row, column and area of a particular square """
 

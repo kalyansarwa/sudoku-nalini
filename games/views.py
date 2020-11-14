@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 
-from .models import Game
+from .models import Game, InvalidGameException
 from .permissions import get_view_filters
 from .games import Grid, display, check_given, update_possibles, check_answers, \
     solve_it, update_game, json_squares
@@ -69,14 +69,18 @@ def index(request, gid=None):
 
         if request.POST.get("check"):
 
-            game, grid = update_game(request, errors)
+            try:
+                game, grid = update_game(request, errors)
 
-            if grid:
+                if grid:
 
-                done, checked = check_answers(grid)
-                update_possibles(grid, errors)
+                    done, checked = check_answers(grid)
+                    update_possibles(grid, errors)
 
-                dgrid = display(grid)
+                    dgrid = display(grid)
+
+            except InvalidGameException as exc:
+                errors.append(str(exc))
 
             context = {'game': game, 'errors':errors, 'display':dgrid, 'done': done,
                        'checked': checked, 'form': form}
@@ -85,21 +89,25 @@ def index(request, gid=None):
 
             force = form.cleaned_data['force']
 
-            game, grid = update_game(request, errors)
+            try:
+                game, grid = update_game(request, errors)
 
-            if grid:
+                if grid:
 
-                save_grid = copy.deepcopy(grid)
+                    save_grid = copy.deepcopy(grid)
 
-                transcript = []
+                    transcript = []
 
-                solve_it(grid, force, transcript)
+                    solve_it(grid, force, transcript)
 
-                jchange = json.dumps(json_squares(grid.changed))
+                    jchange = json.dumps(json_squares(grid.changed))
 
-                done, checked = check_answers(grid)
+                    done, checked = check_answers(grid)
 
-                dgrid = display(save_grid)
+                    dgrid = display(save_grid)
+
+            except InvalidGameException as exc:
+                errors.append(str(exc))
 
             context = {'game': game, 'errors':errors, 'changed': jchange, 'display':dgrid,
                        'done': done, 'checked': checked, 'form': form, 'transcript':transcript}
@@ -133,26 +141,22 @@ def games(request, gid=None):
         except ObjectDoesNotExist:
             errors.append('Game '+str(gid)+' not found')
 
-
     if request.method == 'POST':
 
         form = GamesForm(request.POST)
 
         if form.is_valid():
-            level = form.cleaned_data['level']
-            given = form.cleaned_data['given']
-            note = form.cleaned_data['note']
 
-            clean = check_given(given)
+            clean = check_given(form.cleaned_data['given'])
 
             if clean:
                 if not game:
                     game = Game()
                     game.owner = request.user
 
-                game.level = level
+                game.level = form.cleaned_data['level']
                 game.given = clean
-                game.note = note
+                game.note = form.cleaned_data['note']
 
                 grid = Grid()
                 grid.load(game)
@@ -165,7 +169,6 @@ def games(request, gid=None):
                 else:
                     game.save()
                     return redirect('/games')
-
 
         errors.append('Form is not valid')
 

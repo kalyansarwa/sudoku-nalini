@@ -7,7 +7,9 @@ from games.sections import get_horz, get_vert, get_area, get_row_pos, get_col_po
 
 
 def not_me(grid):
-    """ Remove square's value from related square's possibles """
+    """
+    If a square has been set to a particular number, then all related squares cannot be that number
+    Remove square's value from related square's possibles """
 
     for row in grid.grid:
         for square in row:
@@ -38,7 +40,6 @@ def unique_check(grid, square, vals, related):
             if val in rel.possibles:
                 unique = False
         if unique:
-            ucopy = copy.deepcopy(square)
             square.answer = val
             grid.solved += 1
             square.possibles = [val]
@@ -50,7 +51,10 @@ def unique_check(grid, square, vals, related):
 
 
 def only_me(grid):
-    """ Go thru grid looking for square possibles unique to the row, col or area"""
+    """
+    If a possible value for the square isn't present in any related squares, then
+    that square must be that value.
+    Go thru grid looking for square possibles unique to the row, col or area"""
 
     for row in grid.grid:
         for square in row:
@@ -122,17 +126,12 @@ def blockers(grid):
 
             a_line, o_line, rest = get_sectioned_horz(grid, square)
 
-            okay = blocker_check(grid, square, o_line, rest)
-
-            if not okay:
-                return False
+            blocker_check(grid, square, o_line, rest)
 
             a_line, o_line, rest = get_sectioned_vert(grid, square)
 
-            okay = blocker_check(grid, square, o_line, rest)
+            blocker_check(grid, square, o_line, rest)
 
-            if not okay:
-                return False
 
     return True
 
@@ -163,7 +162,6 @@ def purge_square_not(grid, square, mvals):
         if val not in mvals:
             vals.append(val)
     if vals:
-        ucopy = copy.deepcopy(square)
         square.not_possible(grid, vals, True)
         ccopy = copy.deepcopy(square)
         grid.changed.append(ccopy)
@@ -194,16 +192,15 @@ def match_check(grid, unsolved, num, mvals):
 
     for square in unsolved:
         if square not in matches:
-            okay = purge_square(grid, square, mvals)
-            if not okay:
-                return False
+            purge_square(grid, square, mvals)
 
     return True
 
 
 
 def open_matches(grid, num):
-    """ Look for matches (twins, triplets, etc.) and purge the matched mvals from others """
+    """ Look for matches (twins, triplets, etc.) in a row, column or area, then purge the matched
+        values from the possibles of the other squares in that row, column or area """
 
     for i in range(0, 9):
         unsolved, possibles = get_row_pos(grid, i)
@@ -213,9 +210,7 @@ def open_matches(grid, num):
 
         sets = get_sets(possibles, num)
         for mvals in sets:
-            okay = match_check(grid, unsolved, num, mvals)
-            if not okay:
-                return False
+            match_check(grid, unsolved, num, mvals)
 
     for i in range(0, 9):
         unsolved, possibles = get_col_pos(grid, i)
@@ -225,9 +220,7 @@ def open_matches(grid, num):
 
         sets = get_sets(possibles, num)
         for mvals in sets:
-            okay = match_check(grid, unsolved, num, mvals)
-            if not okay:
-                return False
+            match_check(grid, unsolved, num, mvals)
 
     for i in range(0, 9):
         unsolved, possibles = get_area_num(grid, i)
@@ -237,9 +230,7 @@ def open_matches(grid, num):
 
         sets = get_sets(possibles, num)
         for mvals in sets:
-            okay = match_check(grid, unsolved, num, mvals)
-            if not okay:
-                return False
+            match_check(grid, unsolved, num, mvals)
 
     return True
 
@@ -275,41 +266,33 @@ def hidden_match_check(grid, unsolved, num, mvals):
             return True
 
     for match in matches:
-        okay = purge_square_not(grid, match, mvals)
-        if not okay:
-            print('Problem purging square '+str(match)+' of values other than '+str(mvals))
-            return False
+        purge_square_not(grid, match, mvals)
 
     return True
 
 
 
 def hidden_matches(grid, num):
-    """ find matches that might be hidden in other possibles """
+    """ find matches that might be mixed in with other possibles. If you find twins, triplets, etc.
+    then remove the other possibles from the squares containing the match. """
 
     for i in range(0, 9):
         unsolved, possibles = get_row_pos(grid, i)
         sets = get_sets(possibles, num)
         for mvals in sets:
-            okay = hidden_match_check(grid, unsolved, num, mvals)
-            if not okay:
-                return False
+            hidden_match_check(grid, unsolved, num, mvals)
 
     for i in range(0, 9):
         unsolved, possibles = get_col_pos(grid, i)
         sets = get_sets(possibles, num)
         for mvals in sets:
-            okay = hidden_match_check(grid, unsolved, num, mvals)
-            if not okay:
-                return False
+            hidden_match_check(grid, unsolved, num, mvals)
 
     for i in range(0, 9):
         unsolved, possibles = get_area_num(grid, i)
         sets = get_sets(possibles, num)
         for mvals in sets:
-            okay = hidden_match_check(grid, unsolved, num, mvals)
-            if not okay:
-                return False
+            hidden_match_check(grid, unsolved, num, mvals)
 
     return True
 
@@ -318,50 +301,50 @@ def hidden_matches(grid, num):
 def twins(grid):
     """ wrapper to matches with 2 """
 
-    okay = open_matches(grid, 2)
+    open_matches(grid, 2)
 
-    return okay
+    return True
 
 
 
 def hidden_twins(grid):
     """ wrapper to hidden_matches with 3 """
 
-    okay = hidden_matches(grid, 2)
+    hidden_matches(grid, 2)
 
-    return okay
+    return True
 
 
 def triplets(grid):
     """ wrapper to matches with 3 """
 
-    okay = open_matches(grid, 3)
+    open_matches(grid, 3)
 
-    return okay
+    return True
 
 
 
 def hidden_triplets(grid):
     """ wrapper to hidden_matches with 3 """
 
-    okay = hidden_matches(grid, 3)
+    hidden_matches(grid, 3)
 
-    return okay
+    return True
 
 
 
 def quads(grid):
     """ wrapper to matches with 4 """
 
-    okay = open_matches(grid, 4)
+    open_matches(grid, 4)
 
-    return okay
+    return True
 
 
 
 def hidden_quads(grid):
     """ wrapper to hidden_matches with 4 """
 
-    okay = hidden_matches(grid, 4)
+    hidden_matches(grid, 4)
 
-    return okay
+    return True

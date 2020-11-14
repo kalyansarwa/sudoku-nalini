@@ -1,7 +1,8 @@
 """ This module contains game related models """
 import re
 import copy
-
+import traceback
+import math
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -61,20 +62,24 @@ class Square():
 
     def __init__(self, row, col, val=None):
 
+        arow = math.trunc(row/3)
+        acol = math.trunc(col/3)
+        area = arow*3 + acol
+
         self.row = row
         self.col = col
+        self.area = area
         self.pencil = ""
         self.color = None
         self.wrong = False
+        self.answer = None
+        self.starter = 0
+        self.possibles = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         if val:
             self.answer = val
             self.starter = 1
             self.possibles = [val]
-        else:
-            self.answer = None
-            self.starter = 0
-            self.possibles = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     def __str__(self):
         return '['+str(self.row)+']['+str(self.col)+']='+str(ifnull(self.answer, 0))+ \
@@ -89,13 +94,13 @@ class Square():
                 # throw an exception?
                 self.wrong = True
                 grid.errors += 1
-                return False
+                raise InvalidGameException(' from function not_possible processing square '+ \
+                                           str(self))
             if val in self.possibles:
                 #print('Updating square '+str(self))
                 if not solve:
                     self.possibles.remove(val)
                 else:
-                    ucopy = copy.deepcopy(self)
                     self.possibles.remove(val)
                     if len(self.possibles) == 1:
                         self.answer = self.possibles[0]
@@ -113,14 +118,11 @@ class Square():
         if solve:
             if not self.answer:
                 grid.solved += 1
-            ucopy = copy.deepcopy(self)
         self.possibles = [val]
         self.answer = val
         if solve:
             rcopy = copy.deepcopy(self)
             grid.changed.append(rcopy)
-
-
 
     def match_some(self, vals):
         """ Return true if the vals are the only thing in possibles """
@@ -138,6 +140,18 @@ class Square():
 
         return dict(row=self.row, col=self.col, possible=self.possibles, answer=self.answer,
                     wrong=self.wrong, pencil=self.pencil, starter=self.starter, color=self.color)
+
+
+
+class InvalidGameException(Exception):
+    """ Exception to raise if the game provided is somehow not a valid Sudoku """
+
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        traceback.print_stack(limit=5)
+        #message += traceback.print_stack()
+
+        super(InvalidGameException, self).__init__(message)
 
 
 
